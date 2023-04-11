@@ -8,7 +8,6 @@ import useStore from './../store/useStore';
 
 export default function Tip() {
   //console.log('tip');
-
   const provider = useStore(s => s.provider);
   const signer = useStore(s => s.signer);
 
