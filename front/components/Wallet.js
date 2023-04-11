@@ -22,6 +22,12 @@ export default function Wallet() {
         await window.ethereum.request({ method: "eth_requestAccounts" });
         const newProvider = await new ethers.BrowserProvider(window.ethereum);
         if (newProvider){
+          const { chainId } = await newProvider.getNetwork();
+          if (chainId != 11155111) { 
+            alert('Switch to Sepolia testnet');
+            setSigner(null);
+            return;
+          }
           setProvider(newProvider);
           const newSigner = await newProvider.getSigner();
           setSigner(newSigner);
@@ -57,7 +63,10 @@ export default function Wallet() {
 
   return (<div className={styles.container}>
 
-    <p>wallet : {signer?.address} </p>
+    <p>
+        Wallet : {signer?.address}  <br/>
+        <i>must be on sepolia testnet</i>
+    </p>
     <button onClick={() => connect()}>connect</button>
 
   </div>);
