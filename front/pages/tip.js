@@ -8,7 +8,7 @@ import useStore from './../store/useStore';
 
 export default function Tip() {
   //console.log('tip');
-  const provider = useStore(s => s.provider);
+//  const provider = useStore(s => s.provider);
   const signer = useStore(s => s.signer);
 
   const [balance, setBalance] = useState(null);
@@ -96,7 +96,7 @@ export default function Tip() {
     }
   }
 
-  if (!provider || !signer){
+  if (!signer){
     return 'Connect first';
   }
 
