@@ -4,7 +4,6 @@
 import { useEffect, useState, useRef} from "react";
 import { ethers } from "ethers";
 import contractJson from '../abis/Tip.json';
-
 import useStore from './../store/useStore';
 
 export default function Tip() {
@@ -15,49 +14,49 @@ export default function Tip() {
 
   const [balance, setBalance] = useState(null);
   const [memos, setMemos] = useState([]);
-  const [values, setValues] = useState({});
 
   const tip = useRef();
-
- const address = "0xE8Af1a4108A42D52F162fEb855096aE0E191c718";
+  const formRef = useRef();
 
   useEffect( () => {
     if (!signer) return;
     const init = async () => {
-      
       const abi = contractJson.abi;
-
-      let newBalance = await provider.getBalance(address);
-      newBalance = ethers.formatEther(newBalance);
-      setBalance(newBalance);
-
+      const address = "0xE8Af1a4108A42D52F162fEb855096aE0E191c718";
       tip.current = new ethers.Contract(address,abi,signer);
-      const newMemos = await tip.current.getMemos();
-      setMemos(newMemos);
+      updateAll();
      // tip.current.on("NewMemo", onNewMemo);
     }
 
     init();
   }, [signer])
 
-  const editForm = (e) => {
-    setValues(  {...values, [e.target.name]: e.target.value } );
+
+  const updateBalance = async () => {
+    let newBalance = await tip.current.getBalance();
+    newBalance = ethers.formatEther(newBalance);
+    setBalance(newBalance);
+  }
+
+  const updateMemos = async () => {
+    const newMemos = await tip.current.getMemos();
+    setMemos(newMemos);
+  }
+
+  const updateAll = () => {
+    updateBalance();
+    updateMemos();
   }
 
   const sendForm = async (e) => {
     e.preventDefault();
-    console.log(tip.current);
-    if (!values.name) return;
-    console.log(values);
-
-    let amount = ethers.parseEther(values.amount);
-    amount = amount.toString();
-
+    let amount = ethers.parseEther(formRef.current.amount.value).toString();
+   
     let tx;
     try {
       tx = await tip.current.buyCoffee(
-        values.name,
-        values.message,
+        formRef.current.name.value,
+        formRef.current.message.value,
         {value: amount}
       );
     }catch(e){
@@ -66,14 +65,12 @@ export default function Tip() {
 
     if (tx){
        const receipt = await tx.wait();
-       const newMemos = await tip.current.getMemos();
-       setMemos(newMemos);
-      console.log(receipt);
+       console.log(receipt);
+       updateAll();
     }
 
-    setValues({});
+    formRef.current.reset();
 
-  
 /*
     tip.current.buyCoffee(
       values.name,
@@ -83,12 +80,9 @@ export default function Tip() {
       console.log(res);
     });
     */
-    
-   
   }
 
   const withdraw = async () => {
-    
     let tx;
     try {
       tx = await tip.current.withdrawTips();
@@ -99,10 +93,7 @@ export default function Tip() {
     if (tx){
        const receipt = await tx.wait();
        console.log(receipt);
-       let newBalance = await provider.getBalance(address);
-       newBalance = ethers.formatEther(newBalance);
-       setBalance(newBalance);
- 
+       updateBalance();
     }
   }
 
@@ -116,10 +107,10 @@ export default function Tip() {
         <p>{balance}</p>
         <p><button onClick={withdraw}>withdraw</button> </p>
 
-        <form onSubmit={sendForm}>
-          <input type='text' placeholder='name' name='name' onChange={editForm}  /> <br/>
-          <input type='text' placeholder='message' name='message' onChange={editForm}  /> <br/>
-          <input type='number' placeholder='amount' name='amount' step='any' onChange={editForm}  /> <br/>
+        <form onSubmit={sendForm} ref={formRef}>
+          <input type='text' placeholder='name' name='name' /> <br/>
+          <input type='text' placeholder='message' name='message' /> <br/>
+          <input type='number' placeholder='amount' name='amount' step='any' /> <br/>
           <input type='submit' value='Send' />
         </form>
 
@@ -128,9 +119,7 @@ export default function Tip() {
              <p key={m.timestamp}>{m.from} : {m.message} - {ethers.formatEther(m.amount)}</p>
             )}
         </div>
-   
-
-   
+  
     </div>
   )
 }
